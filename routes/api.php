@@ -17,12 +17,12 @@ use \App\Http\Controllers\Api\AuthController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::middleware('auth:sanctum')->get('/user', fn (Request $request) => $request->user());
 
 Route::apiResource("events", EventController::class);
 Route::apiResource("events.attendees", AttendeeController::class)
     ->scoped()->except(["update"]);
 
 Route::post("/auth/login", [AuthController::class, "login"]);
+Route::post("/auth/logout", [AuthController::class, "logout"])
+    ->middleware("auth:sanctum");

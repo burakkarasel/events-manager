@@ -12,6 +12,12 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 class EventController extends Controller
 {
     use CanLoadRelationships;
+
+    public function __construct()
+    {
+        $this->middleware("auth:sanctum")->except(["index", "show"]);
+    }
+
     private array $relations = ["user", "attendees", "attendees.user"];
     /**
      * Display a listing of the resource.
@@ -33,10 +39,12 @@ class EventController extends Controller
             "start_time" => "required | date",
             "end_time" => "required | date | after:start_time",
         ]);
+
         $event = Event::create([
             ...$data,
-            "user_id" => "9ac8e20d-da06-457d-b6d5-69a28b9b6773"
+            "user_id" => $request->user()->id,
         ]);
+
         return new EventResource(
             $this->loadRelationships($event)
         );
