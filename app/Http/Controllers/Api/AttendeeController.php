@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AttendeeResource;
+use App\Http\Traits\CanLoadRelationships;
 use App\Models\Attendee;
 use App\Models\Event;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class AttendeeController extends Controller
 {
+    use CanLoadRelationships;
+    private array $relations = ["user"];
     /**
      * Display a listing of the resource.
      */
@@ -19,7 +22,7 @@ class AttendeeController extends Controller
         // ->attendees as a property directly fetches the attendees of the event
         // $attendees = $event->attendees
         // ->attendees() builds a query builder use get or paginate the get the result
-        $attendees = $event->attendees()->latest();
+        $attendees = $this->loadRelationships($event->attendees()->latest());
         return AttendeeResource::collection(
             $attendees->paginate(10)
         );
@@ -34,7 +37,7 @@ class AttendeeController extends Controller
         $attendee = $event->attendees()->create([
             "user_id" => "9ac8e20d-da06-457d-b6d5-69a28b9b6773",
         ]);
-        return new AttendeeResource($attendee);
+        return new AttendeeResource($this->loadRelationships($attendee));
     }
 
     /**
@@ -42,7 +45,7 @@ class AttendeeController extends Controller
      */
     public function show(Event $event, Attendee $attendee): AttendeeResource
     {
-        return new AttendeeResource($attendee);
+        return new AttendeeResource($this->loadRelationships($attendee));
     }
 
     /**
