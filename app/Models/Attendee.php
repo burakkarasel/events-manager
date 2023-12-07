@@ -11,6 +11,10 @@ class Attendee extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $fillable = [
+        "user_id"
+    ];
+
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
