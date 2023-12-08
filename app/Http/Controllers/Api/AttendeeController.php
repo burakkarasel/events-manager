@@ -14,6 +14,11 @@ class AttendeeController extends Controller
 {
     use CanLoadRelationships;
     private array $relations = ["user"];
+
+    public function __construct()
+    {
+        $this->middleware("auth:sanctum")->except(["index", "show"]);
+    }
     /**
      * Display a listing of the resource.
      */
@@ -35,7 +40,7 @@ class AttendeeController extends Controller
     {
         // here we use the relation with event to create a new attendee and add a temporary user id inside of it
         $attendee = $event->attendees()->create([
-            "user_id" => "9ac8e20d-da06-457d-b6d5-69a28b9b6773",
+            "user_id" => $request->user()->id,
         ]);
         return new AttendeeResource($this->loadRelationships($attendee));
     }
