@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
 use App\Http\Traits\CanLoadRelationships;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use \App\Models\Event;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -17,6 +16,7 @@ class EventController extends Controller
     public function __construct()
     {
         $this->middleware("auth:sanctum")->except(["index", "show"]);
+        $this->middleware("throttle:api")->only(["store", "destroy", "update"]);
         $this->authorizeResource(Event::class, "event");
     }
 
@@ -63,7 +63,7 @@ class EventController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Event $event)
+    public function update(Request $request, Event $event): EventResource
     {
         $event->update([
             ...$request->validate([
@@ -74,7 +74,6 @@ class EventController extends Controller
             ])
         ]);
         return new EventResource($this->loadRelationships($event));
-
     }
 
     /**

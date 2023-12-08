@@ -10,6 +10,10 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware("throttle:api");
+    }
     public function login(Request $request)
     {
         // firstly we validate the user's inputs
