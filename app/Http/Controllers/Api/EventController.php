@@ -17,6 +17,7 @@ class EventController extends Controller
     public function __construct()
     {
         $this->middleware("auth:sanctum")->except(["index", "show"]);
+        $this->authorizeResource(Event::class, "event");
     }
 
     private array $relations = ["user", "attendees", "attendees.user"];
@@ -64,24 +65,16 @@ class EventController extends Controller
      */
     public function update(Request $request, Event $event)
     {
-        try {
-            // here we use the gate we defined in AuthServiceProvider
-            $this->authorize("event-authorization", $event);
+        $event->update([
+            ...$request->validate([
+                "name" => "string | max:255 | sometimes",
+                "description" => "string | nullable",
+                "start_time" => "date | sometimes",
+                "end_time" => "date | after:start_time | sometimes",
+            ])
+        ]);
+        return new EventResource($this->loadRelationships($event));
 
-            $event->update([
-                ...$request->validate([
-                    "name" => "string | max:255 | sometimes",
-                    "description" => "string | nullable",
-                    "start_time" => "date | sometimes",
-                    "end_time" => "date | after:start_time | sometimes",
-                ])
-            ]);
-            return new EventResource($this->loadRelationships($event));
-        }catch (AuthorizationException $exception) {
-            return response()->json([
-                "message" => $exception->getMessage()
-            ], 403);
-        }
     }
 
     /**
@@ -89,15 +82,7 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
-        try {
-            // here we use the gate we defined in AuthServiceProvider
-            $this->authorize("event-authorization", $event);
-            $event->delete();
-            return response(status: 204);
-        }catch (AuthorizationException $exception){
-            return response()->json([
-                "message" => $exception->getMessage()
-            ], 403);
-        }
+        $event->delete();
+        return response(status: 204);
     }
 }

@@ -7,7 +7,6 @@ use App\Http\Resources\AttendeeResource;
 use App\Http\Traits\CanLoadRelationships;
 use App\Models\Attendee;
 use App\Models\Event;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -19,6 +18,7 @@ class AttendeeController extends Controller
     public function __construct()
     {
         $this->middleware("auth:sanctum")->except(["index", "show"]);
+        $this->authorizeResource(Attendee::class, "attendee");
     }
     /**
      * Display a listing of the resource.
@@ -59,14 +59,7 @@ class AttendeeController extends Controller
      */
     public function destroy(Event $event, Attendee $attendee)
     {
-        try {
-            $this->authorize("attendee-authorization", [$event, $attendee]);
-            $attendee->delete();
-            return response(status: 204);
-        }catch (AuthorizationException $exception) {
-            return response()->json([
-                "message" => $exception->getMessage()
-            ], 403);
-        }
+        $attendee->delete();
+        return response(status: 204);
     }
 }
