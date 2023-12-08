@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
 use App\Http\Traits\CanLoadRelationships;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use \App\Models\Event;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -61,17 +62,26 @@ class EventController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Event $event): EventResource
+    public function update(Request $request, Event $event)
     {
-        $event->update([
-            ...$request->validate([
-                "name" => "string | max:255 | sometimes",
-                "description" => "string | nullable",
-                "start_time" => "date | sometimes",
-                "end_time" => "date | after:start_time | sometimes",
-            ])
-        ]);
-        return new EventResource($this->loadRelationships($event));
+        try {
+            // here we use the gate we defined in AuthServiceProvider
+            $this->authorize("event-authorization", $event);
+
+            $event->update([
+                ...$request->validate([
+                    "name" => "string | max:255 | sometimes",
+                    "description" => "string | nullable",
+                    "start_time" => "date | sometimes",
+                    "end_time" => "date | after:start_time | sometimes",
+                ])
+            ]);
+            return new EventResource($this->loadRelationships($event));
+        }catch (AuthorizationException $exception) {
+            return response()->json([
+                "message" => $exception->getMessage()
+            ], 403);
+        }
     }
 
     /**
@@ -79,7 +89,15 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
-        $event->delete();
-        return response(status: 204);
+        try {
+            // here we use the gate we defined in AuthServiceProvider
+            $this->authorize("event-authorization", $event);
+            $event->delete();
+            return response(status: 204);
+        }catch (AuthorizationException $exception){
+            return response()->json([
+                "message" => $exception->getMessage()
+            ], 403);
+        }
     }
 }
